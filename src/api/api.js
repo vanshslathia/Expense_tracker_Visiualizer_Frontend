@@ -8,16 +8,21 @@ import { loaderControl } from "../utils/loaderControl"; // 👈 loader utility
 
 // Use environment variable or detect localhost
 const getBaseURL = () => {
-  // Check if VITE_API_URL is set
+  // Check if VITE_API_URL is set (for Vercel/production)
   if (import.meta.env.VITE_API_URL) {
-    return `${import.meta.env.VITE_API_URL}/api/v1`;
+    // If VITE_API_URL already includes /api/v1, use it as-is
+    // Otherwise, append /api/v1
+    const baseUrl = import.meta.env.VITE_API_URL;
+    return baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
   }
   // Check if running on localhost
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     return "http://localhost:5000/api/v1";
   }
-  // Default to production
-  return "https://expensync-ex0w.onrender.com/api/v1";
+  // Default fallback (update this to your Vercel backend URL)
+  // This should be set via VITE_API_URL environment variable in Vercel
+  console.warn("⚠️ VITE_API_URL not set. Using fallback URL. Please set VITE_API_URL in Vercel environment variables.");
+  return "https://your-backend.vercel.app/api/v1";
 };
 
 const BASE_URL = getBaseURL();
