@@ -13,16 +13,35 @@ const AiSummary = ({ userId }) => {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        const apiUrl = import.meta.env.VITE_API_URL || 
-                       (window.location.hostname === 'localhost' ? "http://localhost:5000" : "https://expensync-ex0w.onrender.com");
+        // Construct API URL - note: AI routes are at /api/ai, not /api/v1/ai
+        let apiUrl;
+        if (import.meta.env.VITE_API_URL) {
+          apiUrl = import.meta.env.VITE_API_URL;
+        } else if (window.location.hostname === 'localhost') {
+          apiUrl = "http://localhost:5000";
+        } else {
+          apiUrl = "https://expensync-ex0w.onrender.com";
+        }
         
-        const res = await axios.get(`${apiUrl}/api/ai/trend-insights/${userId}`, {
+        const url = `${apiUrl}/api/ai/trend-insights/${userId}`;
+        console.log("🔍 Fetching AI insights from:", url);
+        
+        const res = await axios.get(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
         
-        setInsights(res.data);
+        if (res.data && res.data.success !== false) {
+          setInsights(res.data);
+        } else {
+          console.warn("AI insights response indicates failure:", res.data);
+          setInsights(null);
+        }
       } catch (error) {
         console.error("Error fetching AI insights:", error);
+        if (error.response) {
+          console.error("Response status:", error.response.status);
+          console.error("Response data:", error.response.data);
+        }
         setInsights(null);
       } finally {
         setLoading(false);

@@ -161,10 +161,21 @@ export const signupUser = async (formData) => {
   console.log("🚀 Calling: signupUser", formData);
   try {
     const res = await API.post("/auth/signup", formData);
-    showSuccessToast("Signup Successful! Please login.");
+    if (res.data && res.data.success) {
+      showSuccessToast(res.data.msg || "Signup Successful! Please login.");
+    } else {
+      showSuccessToast("Signup Successful! Please login.");
+    }
     return res.data;
   } catch (error) {
-    showErrorToast("Signup Failed");
+    // Extract error message from server response
+    const errorMessage = error.response?.data?.msg || 
+                        error.response?.data?.message || 
+                        error.message || 
+                        "Signup Failed. Please try again.";
+    
+    console.error("❌ Signup error:", error.response?.data || error);
+    showErrorToast(errorMessage);
     throw error;
   }
 };
