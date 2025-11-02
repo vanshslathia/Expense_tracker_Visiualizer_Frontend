@@ -8,7 +8,7 @@ import { loaderControl } from "../utils/loaderControl"; // 👈 loader utility
 
 // Use environment variable or detect localhost
 const getBaseURL = () => {
-  // Check if VITE_API_URL is set (for Vercel/production)
+  // Check if VITE_API_URL is set (for Vercel/production override)
   if (import.meta.env.VITE_API_URL) {
     // If VITE_API_URL already includes /api/v1, use it as-is
     // Otherwise, append /api/v1
@@ -19,10 +19,8 @@ const getBaseURL = () => {
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     return "http://localhost:5000/api/v1";
   }
-  // Default fallback (update this to your Vercel backend URL)
-  // This should be set via VITE_API_URL environment variable in Vercel
-  console.warn("⚠️ VITE_API_URL not set. Using fallback URL. Please set VITE_API_URL in Vercel environment variables.");
-  return "https://your-backend.vercel.app/api/v1";
+  // Default to Render backend (https://expense-tracker-visiualizer-backend.onrender.com)
+  return "https://expense-tracker-visiualizer-backend.onrender.com/api/v1";
 };
 
 const BASE_URL = getBaseURL();

@@ -16,11 +16,13 @@ const AiSummary = ({ userId }) => {
         // Construct API URL - note: AI routes are at /api/ai, not /api/v1/ai
         let apiUrl;
         if (import.meta.env.VITE_API_URL) {
-          apiUrl = import.meta.env.VITE_API_URL;
+          // Use VITE_API_URL if set (remove /api/v1 if present since AI routes use /api/ai)
+          apiUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
         } else if (window.location.hostname === 'localhost') {
           apiUrl = "http://localhost:5000";
         } else {
-          apiUrl = "https://expensync-ex0w.onrender.com";
+          // Default to Render backend
+          apiUrl = "https://expense-tracker-visiualizer-backend.onrender.com";
         }
         
         const url = `${apiUrl}/api/ai/trend-insights/${userId}`;
