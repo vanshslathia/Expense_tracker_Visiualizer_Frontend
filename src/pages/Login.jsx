@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Player } from "@lottiefiles/react-lottie-player";
 import Layout from "../components/Layout";
-import { loginUser } from "../api/api";
+import { loginUser, resendVerificationEmail } from "../api/api";
+import { showSuccessToast } from "../utils/toast";
 import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
@@ -20,6 +21,31 @@ const Login = () => {
       navigate("/home");
     } catch (err) {
       console.error("Login failed", err);
+      // Error toast is already shown by API interceptor
+      // Check if it's a verification error
+      if (err.response?.data?.requiresVerification) {
+        // Show additional message about resending verification
+        setTimeout(() => {
+          if (window.confirm("Your email is not verified. Would you like to resend the verification email?")) {
+            handleResendVerification(formData.email);
+          }
+        }, 1500);
+      }
+    }
+  };
+
+  const handleResendVerification = async (email) => {
+    if (!email) {
+      showErrorToast("Please enter your email address");
+      return;
+    }
+    try {
+      const result = await resendVerificationEmail(email);
+      // Success toast is already shown by the API function
+      console.log("✅ Resend verification result:", result);
+    } catch (err) {
+      console.error("Failed to resend verification:", err);
+      // Error toast is already shown by the API function
     }
   };
 
@@ -45,6 +71,7 @@ const Login = () => {
                   type="email"
                   name="email"
                   placeholder="Email"
+                  autoComplete="email"
                   required
                   onChange={handleChange}
                   className="w-full p-4 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 text-slate-800 dark:text-gray-100 bg-gray-100 dark:bg-slate-800 transition-transform duration-300 hover:scale-105"
@@ -53,6 +80,7 @@ const Login = () => {
                   type="password"
                   name="password"
                   placeholder="Password"
+                  autoComplete="current-password"
                   required
                   onChange={handleChange}
                   className="w-full p-4 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 text-slate-800 dark:text-gray-100 bg-gray-100 dark:bg-slate-800 transition-transform duration-300 hover:scale-105"

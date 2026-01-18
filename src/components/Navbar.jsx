@@ -35,6 +35,7 @@ const Navbar = () => {
                 <>
                   <li><Link to="/home" className={linkClass("/home")}>Home</Link></li>
                   <li><Link to="/transactions" className={linkClass("/transactions")}>Transactions</Link></li>
+                  <li><Link to="/recurring" className={linkClass("/recurring")}>Recurring</Link></li>
                   <li><Link to="/budget" className={linkClass("/budget")}>Budget</Link></li>
                   <li><Link to="/charts" className={linkClass("/charts")}>Charts</Link></li>
                 </>

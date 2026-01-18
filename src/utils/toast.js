@@ -70,3 +70,27 @@ export const showInfoToast = (message) => {
     autoClose: 3000,
   });
 };
+
+// ✅ Warning toast for critical budget alerts
+export const showWarningToast = (message) => {
+  const theme = getTheme();
+
+  toast.warning(message, {
+    style: {
+      background:
+        theme === "dark"
+          ? "linear-gradient(135deg, #1a1a1a, #2d1b1b)"
+          : "linear-gradient(135deg, #fff3e0, #ffe0b2)",
+      color: theme === "dark" ? "#ff9800" : "#e65100",
+      fontWeight: "600",
+      borderLeft: theme === "dark" ? "5px solid #ff9800" : "5px solid #f57c00",
+      borderRadius: "12px",
+      boxShadow:
+        theme === "dark"
+          ? "0 4px 12px rgba(255,152,0,0.3)"
+          : "0 4px 12px rgba(245,124,0,0.2)",
+    },
+    autoClose: 5000, // Longer display for critical alerts
+    icon: "⚠️",
+  });
+};

@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Player } from "@lottiefiles/react-lottie-player";
+import { Mail, CheckCircle } from "lucide-react";
 import Layout from "../components/Layout";
-import { signupUser } from "../api/api"; 
-import { showErrorToast } from "../utils/toast";
+import { signupUser, resendVerificationEmail } from "../api/api"; 
+import { showErrorToast, showSuccessToast, showInfoToast } from "../utils/toast";
 
 const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [resending, setResending] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,10 +26,32 @@ const Signup = () => {
     }
 
     try {
-      await signupUser(formData); 
-      navigate("/login");
+      const response = await signupUser(formData);
+      // Show verification message
+      if (response?.requiresVerification) {
+        setVerificationEmail(formData.email);
+        setShowVerificationMessage(true);
+        setFormData({ name: "", email: "", password: "" });
+        showInfoToast("Please check your email to verify your account.");
+      } else {
+        navigate("/login");
+      }
     } catch (err) {
       console.error(err); 
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!verificationEmail) return;
+    
+    setResending(true);
+    try {
+      await resendVerificationEmail(verificationEmail);
+      showSuccessToast("Verification email sent! Please check your inbox.");
+    } catch (err) {
+      showErrorToast("Failed to resend verification email. Please try again.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -48,11 +74,46 @@ const Signup = () => {
                 Create Your Account
               </h2>
 
+              {showVerificationMessage ? (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-center">
+                    <Mail className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-2">
+                      Verify Your Email Address
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-300 mb-4">
+                      We've sent a verification link to <strong>{verificationEmail}</strong>
+                    </p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                      Please check your inbox and click the verification link to activate your account.
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      <button
+                        onClick={handleResendVerification}
+                        disabled={resending}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {resending ? "Sending..." : "Resend Email"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowVerificationMessage(false);
+                          navigate("/login");
+                        }}
+                        className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                      >
+                        Go to Login
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <input
                   type="text"
                   name="name"
                   placeholder="Full Name"
+                  autoComplete="name"
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full p-4 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 text-slate-800 dark:text-gray-100 bg-gray-100 dark:bg-slate-800 transition-transform duration-300 hover:scale-105"
@@ -61,6 +122,7 @@ const Signup = () => {
                   type="email"
                   name="email"
                   placeholder="Email"
+                  autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full p-4 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 text-slate-800 dark:text-gray-100 bg-gray-100 dark:bg-slate-800 transition-transform duration-300 hover:scale-105"
@@ -69,6 +131,7 @@ const Signup = () => {
                   type="password"
                   name="password"
                   placeholder="Password"
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
                   className="w-full p-4 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 text-slate-800 dark:text-gray-100 bg-gray-100 dark:bg-slate-800 transition-transform duration-300 hover:scale-105"
@@ -80,6 +143,7 @@ const Signup = () => {
                   Signup
                 </button>
               </form>
+              )}
 
               <p className="mt-4 text-center text-sm text-slate-800 dark:text-slate-300">
                 Already have an account?{" "}

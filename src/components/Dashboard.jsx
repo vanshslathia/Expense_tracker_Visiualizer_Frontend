@@ -15,6 +15,7 @@ import NetWorthCard from "./NetWorthCard";
 import AiSummary from "./AiSummary";
 import BudgetAlerts from "./BudgetAlerts";
 import Layout from "./Layout";
+import FinancialHealthScore from "./financialHealth/FinancialHealthScore";
 
 // Centralized API imports
 import { getTransactions, fetchBudgetSummary, fetchCategoryGoals, fetchDebts } from "../api/api";
@@ -136,6 +137,13 @@ const Dashboard = () => {
                     ))}
                     <NetWorthCard income={totalIncome} expense={totalExpense} />
                 </div>
+
+                {/* Financial Health Score */}
+                {userId && (
+                    <div className="mt-16">
+                        <FinancialHealthScore />
+                    </div>
+                )}
 
                 {/* Budget Alerts Section */}
                 {userId && (

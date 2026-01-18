@@ -8,11 +8,13 @@ import "react-toastify/dist/ReactToastify.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VerifyEmail from "./pages/VerifyEmail";
 import AddTransaction from "./components/AddTransaction";
 import Transactions from "./components/Transactions";
 import Budget from "./components/Budget";
 import Charts from "./components/Charts";
 import Landing from "./pages/Landing";
+import RecurringTransactions from "./components/recurring/RecurringTransactions";
 
 function App() {
   return (
@@ -41,11 +43,13 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/home" element={<Home />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/budget" element={<Budget />} />
             <Route path="/charts" element={<Charts />} />
             <Route path="/add" element={<AddTransaction />} />
+            <Route path="/recurring" element={<RecurringTransactions />} />
           </Routes>
         </Router>
       </LoaderProvider>

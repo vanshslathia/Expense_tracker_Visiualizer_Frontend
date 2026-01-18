@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { ArrowDownCircle, ArrowUpCircle, MinusCircle, Calendar, Tag } from "lucide-react";
 import TransactionReminders from "./TransactionReminders";
 import Layout from "./Layout";
-import { getTransactions, deleteTransaction } from "../api/api";
+import { getTransactions, deleteTransaction, exportTransactions } from "../api/api";
+import { showErrorToast, showSuccessToast } from "../utils/toast";
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
@@ -40,6 +41,13 @@ const Transactions = () => {
   const [filter, setFilter] = useState("");
   const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
+  const [exportFormat, setExportFormat] = useState("pdf");
+  const [exporting, setExporting] = useState(false);
+  const [exportMonth, setExportMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -185,6 +193,63 @@ const Transactions = () => {
     });
   };
 
+  const parseFilename = (header) => {
+    if (!header) return null;
+    const match = /filename="?([^"]+)"?/i.exec(header);
+    return match?.[1];
+  };
+
+  const handleExport = async () => {
+    if (!exportMonth) {
+      showErrorToast("Please select a month and year to export.");
+      return;
+    }
+    const [yearStr, monthStr] = exportMonth.split("-");
+    const month = Number(monthStr);
+    const year = Number(yearStr);
+    if (!month || !year || month < 1 || month > 12) {
+      showErrorToast("Invalid month selection.");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const response = await exportTransactions(exportFormat, search, filter, month, year);
+      const suggestedName =
+        parseFilename(response.headers["content-disposition"]) ||
+        `Expense_Report_${exportMonth}_${exportFormat === "ppt" ? "pptx" : exportFormat}`;
+      const mimeType =
+        response.headers["content-type"] ||
+        (exportFormat === "csv"
+          ? "text/csv"
+          : exportFormat === "ppt"
+          ? "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          : "application/pdf");
+
+      const blob = new Blob([response.data], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", suggestedName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showSuccessToast("Export ready! Download started.");
+    } catch (err) {
+      console.error("❌ Error exporting data:", err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.msg ||
+        err?.message ||
+        "Failed to export data. Please try again.";
+      showErrorToast(msg);
+    } finally {
+      setExporting(false);
+      setShowExportModal(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="bg-gradient-to-br from-slate-50 to-white dark:from-[#0c0f1c] dark:to-[#1a1d2e] border border-slate-200 dark:border-slate-700 p-6 sm:p-8 md:p-10 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] transition-all duration-500">
@@ -216,6 +281,29 @@ const Transactions = () => {
                 <option value="Income">Income</option>
                 <option value="Others">Others</option>
               </select>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex items-center gap-3 bg-white/90 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-3 shadow-sm">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  Export format
+                </span>
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                  className="px-3 py-2 rounded-lg bg-transparent border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-white focus:outline-none"
+                >
+                  <option value="pdf">PDF</option>
+                  <option value="csv">CSV</option>
+                  <option value="ppt">PPT</option>
+                </select>
+              </div>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed transition"
+                title="Export Data"
+              >
+                Export Data
+              </button>
             </div>
 
             {error && <p className="text-red-500 mb-4">{error}</p>}
@@ -379,6 +467,43 @@ const Transactions = () => {
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmDelete}
       />
+
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-700">
+            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
+              Choose month & year
+            </h3>
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Month
+              </label>
+              <input
+                type="month"
+                value={exportMonth}
+                onChange={(e) => setExportMonth(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              />
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  disabled={exporting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed transition"
+                >
+                  {exporting ? "Preparing..." : "Export"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

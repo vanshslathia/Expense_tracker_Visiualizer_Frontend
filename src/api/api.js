@@ -147,7 +147,12 @@ export const loginUser = async (formData) => {
     showSuccessToast("Login Successful!");
     return res.data;
   } catch (error) {
-    showErrorToast("Login Failed");
+    const errorMsg = error.response?.data?.msg || "Login Failed";
+    if (error.response?.data?.requiresVerification) {
+      showErrorToast("Please verify your email address before logging in.");
+    } else {
+      showErrorToast(errorMsg);
+    }
     throw error;
   }
 };
@@ -156,6 +161,7 @@ export const logoutUser = () => {
   console.log("🚀 Logging out user...");
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
   showInfoToast("Logged out successfully.");
   window.location.href = "/login";
 };
@@ -165,7 +171,11 @@ export const signupUser = async (formData) => {
   try {
     const res = await API.post("/auth/signup", formData);
     if (res.data && res.data.success) {
-      showSuccessToast(res.data.msg || "Signup Successful! Please login.");
+      if (res.data.requiresVerification) {
+        showInfoToast(res.data.msg || "Please check your email to verify your account.");
+      } else {
+        showSuccessToast(res.data.msg || "Signup Successful! Please login.");
+      }
     } else {
       showSuccessToast("Signup Successful! Please login.");
     }
@@ -226,6 +236,21 @@ export const deleteTransaction = async (id) => {
     return res.data;
   } catch (error) {
     showErrorToast("Failed to delete transaction");
+    throw error;
+  }
+};
+
+export const exportTransactions = async (format = "pdf", search = "", filter = "", month, year) => {
+  console.log("🚀 Calling: exportTransactions", { format, search, filter, month, year });
+  try {
+    const response = await API.get("/transactions/export", {
+      params: { format, search, filter, month, year },
+      responseType: "blob",
+      skipLoader: true,
+    });
+    return response;
+  } catch (error) {
+    showErrorToast("Failed to export data");
     throw error;
   }
 };
@@ -425,6 +450,133 @@ export const getAIInsights = async (userId) => {
       // Error setting up request
       throw error;
     }
+  }
+};
+
+//
+// ✅ Recurring Transactions
+//
+export const getRecurringRules = async (isActive = null) => {
+  console.log("🚀 Calling: getRecurringRules");
+  try {
+    const params = {};
+    if (isActive !== null) params.isActive = isActive;
+    const res = await API.get("/recurring", { params });
+    return res.data;
+  } catch (error) {
+    showErrorToast("Failed to fetch recurring transactions");
+    throw error;
+  }
+};
+
+export const createRecurringRule = async (data) => {
+  console.log("🚀 Calling: createRecurringRule", data);
+  try {
+    const res = await API.post("/recurring/create", data);
+    showSuccessToast("Recurring transaction created!");
+    return res.data;
+  } catch (error) {
+    showErrorToast("Failed to create recurring transaction");
+    throw error;
+  }
+};
+
+export const updateRecurringRule = async (id, data) => {
+  console.log("🚀 Calling: updateRecurringRule", id, data);
+  try {
+    const res = await API.put(`/recurring/${id}`, data);
+    showSuccessToast("Recurring transaction updated!");
+    return res.data;
+  } catch (error) {
+    showErrorToast("Failed to update recurring transaction");
+    throw error;
+  }
+};
+
+export const deleteRecurringRule = async (id) => {
+  console.log("🚀 Calling: deleteRecurringRule", id);
+  try {
+    const res = await API.delete(`/recurring/${id}`);
+    showSuccessToast("Recurring transaction deleted!");
+    return res.data;
+  } catch (error) {
+    showErrorToast("Failed to delete recurring transaction");
+    throw error;
+  }
+};
+
+export const toggleRecurringRuleStatus = async (id) => {
+  console.log("🚀 Calling: toggleRecurringRuleStatus", id);
+  try {
+    const res = await API.patch(`/recurring/${id}/toggle`);
+    return res.data;
+  } catch (error) {
+    showErrorToast("Failed to update status");
+    throw error;
+  }
+};
+
+//
+// ✅ Financial Health Score
+//
+export const getFinancialHealthScore = async () => {
+  console.log("🚀 Calling: getFinancialHealthScore");
+  try {
+    const res = await API.get("/health/score");
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch financial health score:", error);
+    throw error;
+  }
+};
+
+export const getHistoricalHealthScores = async (months = 6) => {
+  console.log("🚀 Calling: getHistoricalHealthScores", months);
+  try {
+    const res = await API.get("/health/history", { params: { months } });
+    return res.data;
+  } catch (error) {
+    console.error("Failed to fetch historical health scores:", error);
+    throw error;
+  }
+};
+
+//
+// ✅ Email Verification
+//
+export const verifyEmail = async (token) => {
+  console.log("🚀 Calling: verifyEmail", token ? token.substring(0, 10) + "..." : "no token");
+  try {
+    const res = await API.get("/auth/verify-email", {
+      params: { token },
+      skipLoader: true,
+    });
+    console.log("✅ Verification response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("❌ Verification error:", error.response?.data || error.message);
+    const errorMsg = error.response?.data?.msg || error.response?.data?.message || "Verification failed";
+    showErrorToast(errorMsg);
+    throw error;
+  }
+};
+
+export const resendVerificationEmail = async (email) => {
+  console.log("🚀 Calling: resendVerificationEmail", email);
+  try {
+    const res = await API.post("/auth/resend-verification", { email });
+    const message = res.data.msg || "Verification email sent!";
+    if (res.data.success) {
+      showSuccessToast(message);
+    } else {
+      showErrorToast(message);
+    }
+    return res.data;
+  } catch (error) {
+    console.error("❌ Resend verification error:", error.response?.data || error.message);
+    const errorMsg = error.response?.data?.msg || error.response?.data?.message || "Failed to resend verification email";
+    showErrorToast(errorMsg);
+    throw error;
   }
 };
 
