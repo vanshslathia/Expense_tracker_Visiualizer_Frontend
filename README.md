@@ -133,9 +133,13 @@ http://localhost:3000
 🌟 Why This Project Stands Out
 
 ✅ Clean and modern UI
+
 ✅ AI-powered insights & chatbot
+
 ✅ Real-world finance use case
+
 ✅ Interactive charts & dashboards
+
 ✅ Strong resume impact
 
 <p align="center"> ⭐ <b>If you like this project, don’t forget to STAR the repository!</b> ⭐ </p> ```
