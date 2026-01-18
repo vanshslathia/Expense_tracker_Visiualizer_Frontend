@@ -49,6 +49,31 @@ Built as a **Final Year Major Project** and a **Resume / Portfolio Project**.
 - Powered by Chart.js & Recharts
 
 ---
+🔁 Recurring Transactions (Automation Feature)
+
+Users can automate frequently occurring expenses to reduce manual effort and ensure consistency.
+
+✨ What it does
+
+Set recurring expenses like:
+
+🏠 Monthly Rent
+
+📺 Subscriptions (Netflix, Spotify)
+
+💡 Bills or EMIs
+
+Automatically adds transactions based on defined frequency
+
+Prevents missed or forgotten expenses
+
+⚙️ How it helps
+
+Reduces daily manual entry
+
+Improves accuracy of monthly analytics
+
+Makes the app behave like a real-world finance system
 
 ## 🤖 AI-Powered Experience
 
@@ -64,6 +89,39 @@ Ask natural language questions like:
 - 🗣️ "Give me this month’s expense summary"
 
 ---
+
+📊 Financial Health Score (Gamified & Motivational)
+
+The Financial Health Score converts raw financial data into a single, easy-to-understand score (0–100) that motivates better money habits.
+
+📈 Score is calculated using:
+
+💰 Savings percentage (Income vs Expense)
+
+🎯 Budget discipline
+
+📉 Expense consistency (month-to-month stability)
+
+🏁 Goal completion behavior
+
+🎮 User Experience
+
+Large visual score card
+
+Color-coded feedback:
+
+🔴 Poor
+
+🟡 Average
+
+🟢 Excellent
+
+Monthly score trend chart
+
+AI-generated motivational messages like:
+
+“Spend ₹2,000 less on food to reach a score of 80”
+
 
 ## 📤 Data Export
 - Export expense data for:
